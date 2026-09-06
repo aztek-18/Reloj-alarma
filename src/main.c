@@ -1,29 +1,22 @@
-/*
-Este proyecto es para probar si puedo compilar un archivo .c.
-También es para ver si puedo programar directamente desde este visualizador de 
-texto un proyecto que no había concluido.
-*/
-
-// #pragma config FOSC = INTOSC // Oscilador Interno
-// #pragma config WDTE = OFF      // Watchdog Timer Desactivado
-// #pragma config PWRTE = OFF     // Power-up Timer Desactivado
-// #pragma config MCLRE = OFF     // RA5/MCLR como entrada digital
-// #pragma config BOREN = ON      // Brown-out Detect Activado
-// #pragma config LVP = OFF       // Programación en Alta Tensión
-// #pragma config CPD = OFF       // Protección de Datos Desactivada
-// #pragma config CP = OFF        // Protección de Programa Desactivada
-
+#include "config_fuses.h"
 #include <xc.h>
-// #include <pic16f887.h>
 
-#define _XTAL_FREQ 4000000 // Frecuencia del oscilador interno (4 MHz típico)
+void setup()
+{
+    // Puerto B como salidas e iniciandolo como 1s.
+    TRISB = 0x00;
+    PORTB = 0XFF;
+
+    return;
+}
 
 int main(void) {
-    TRISB = 0x00; // Configura el Puerto B como salidas
+    setup();
     
-    while(1) {
-        PORTB ^= 0xFF; // Invierte el estado de todos los bits del Puerto B
-        __delay_ms(500); // Retardo de 500ms
+    while(1) 
+    {
+        PORTB = !PORTB;
+        __delay_ms(1000); // Retardo de 500ms
     }
     return 0;
 }   

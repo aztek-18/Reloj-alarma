@@ -3,6 +3,8 @@
 # ============================================================
 CHIP       := 16F887
 CC         := xc8-cc
+PICCHIP	   := PPIC16F887
+PK2CMD	   := /opt/pk2cmd-x86_64.appimage
 
 BUILD_DIR  := build
 TARGET     := main
@@ -38,7 +40,7 @@ HEX := $(BUILD_DIR)/$(TARGET).hex
 # Targets
 # ============================================================
 
-.PHONY: all clean
+.PHONY: all clean flash on off
 
 all: $(HEX)
 # ------------------------------------------------------------
@@ -70,3 +72,14 @@ $(BUILD_DIR):
 # ------------------------------------------------------------
 clean:
 	rm -rf $(BUILD_DIR)
+# ------------------------------------------------------------
+# FLash using Pickit3
+# ------------------------------------------------------------
+flash:
+	$(PK2CMD) -$(PICCHIP) -F$(HEX) -M -R
+
+on:
+	$(PK2CMD) -$(PICCHIP) -A5.0 -T
+
+off:
+	$(PK2CMD) -$(PICCHIP) 
