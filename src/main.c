@@ -3,20 +3,24 @@
 
 void setup()
 {
-    // Puerto B como salidas e iniciandolo como 1s.
-    TRISB = 0x00;
-    PORTB = 0XFF;
+    OSCCON = 0b01100001;
 
-    return;
+    ANSEL = 0x00;
+    ANSELH = 0x00;
+
+    TRISD = 0x00;
+    PORTD = 0XFF;
 }
 
-int main(void) {
+int main()
+{
     setup();
-    
-    while(1) 
+    while(1)
     {
-        PORTB = !PORTB;
-        __delay_ms(1000); // Retardo de 500ms
+        PORTD = 0XFF;
+        __delay_ms(500);
+        PORTD = 0X00;
+        __delay_ms(500);
     }
     return 0;
-}   
+}
