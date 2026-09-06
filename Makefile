@@ -76,7 +76,10 @@ clean:
 # FLash using Pickit3
 # ------------------------------------------------------------
 flash:
-	$(PK2CMD) -$(PICCHIP) -F$(HEX) -M -R
+	@@echo "Borrando programa previo..."
+	$(PK2CMD) -$(PICCHIP) -E
+	@@echo "Flasheando el programa..."
+	$(PK2CMD) -$(PICCHIP) -F$(HEX) -M -R -T
 
 on:
 	$(PK2CMD) -$(PICCHIP) -A5.0 -T
