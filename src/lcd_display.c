@@ -137,3 +137,10 @@ bool LCD_Init()
 
     return true;
 }
+
+bool LCD_Clean()
+{
+    if (!LCD_Command(0x01))
+        return false;
+    return true;
+}
