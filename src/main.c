@@ -2,8 +2,7 @@
 #include <stdint.h>
 #include "config_fuses.h"
 #include "i2c.h"
-
-#define DISPLAY_ADDR 0x27
+#include "lcd_display.h"
 
 void setup()
 {
@@ -20,6 +19,25 @@ void setup()
 
     // Configuration of the i2c
     i2c_init();
+
+    // Start of the LCD (i2c)
+    if(!LCD_Init())
+    {
+        while(1)
+        {
+            PORTDbits.RD1 = !PORTDbits.RD1;
+            __delay_ms(100);
+        }
+    }
+
+    PORTDbits.RD1 = 1;
+
+    // Mostrar mensaje
+    LCD_SetCursor(0, 0);
+    LCD_Puts("Hola, PIC16F887");
+
+    LCD_SetCursor(1, 0);
+    LCD_Puts("I2C funcionando");
 }
 
 int main()
@@ -28,9 +46,9 @@ int main()
 
     while(1)
     {
-        PORTD = 0XFF;
+        PORTDbits.RD1 = 1;
         __delay_ms(500);
-        PORTD = 0X00;
+        PORTDbits.RD1 = 0;
         __delay_ms(500);
     }
     return 0;
