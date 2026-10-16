@@ -4,7 +4,7 @@
 #include "i2c.h"
 #include "lcd_display.h"
 
-void setup()
+int main()
 {
     // define the time of the Oscilation to 4MHz
     OSCCON = 0b01100001;
@@ -38,12 +38,6 @@ void setup()
 
     LCD_SetCursor(1, 0);
     LCD_Puts("I2C funcionando");
-}
-
-int main()
-{
-    setup();
-
     while(1)
     {
         PORTDbits.RD1 = 1;
