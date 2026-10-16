@@ -21,6 +21,54 @@ void i2c_init()
     PIR2bits.BCLIF = 0;
 }
 
+bool i2c_scan_address(uint8_t* found_address)
+{
+    uint8_t address;
+    bool ack;
+
+    for (address = 0x08; address <= 0x77; address++)
+    {
+        if (!i2c_start())
+            return false;
+
+        ack = i2c_write_address(address);
+
+        if (!i2c_stop())
+            return false;
+
+        if (ack)
+        {
+            *found_address = address;
+            return true;
+        }
+    }
+
+    return false;
+}
+// Envía un byte y devuelve true si recibe ACK.
+bool i2c_write_byte(uint8_t data)
+{
+    if (!i2c_wait_idle())
+        return false;
+
+    PIR1bits.SSPIF = 0;
+    SSPBUF = data;
+
+    if (!i2c_wait_complete())
+        return false;
+
+    return (SSPCON2bits.ACKSTAT == 0);
+}
+
+// Recibe una dirección de 7 bits, no desplazada.
+bool i2c_write_address(uint8_t address)
+{
+    if (address > 0x7F)
+        return false;
+
+    return i2c_write_byte((uint8_t)(address << 1) | 0);
+}
+
 static bool i2c_wait_idle(void)
 {
     uint32_t timeout = I2C_TIMEOUT;
@@ -72,27 +120,4 @@ bool i2c_stop(void)
     return i2c_wait_complete();
 }
 
-// Envía un byte y devuelve true si recibe ACK.
-bool i2c_write_byte(uint8_t data)
-{
-    if (!i2c_wait_idle())
-        return false;
-
-    PIR1bits.SSPIF = 0;
-    SSPBUF = data;
-
-    if (!i2c_wait_complete())
-        return false;
-
-    return (SSPCON2bits.ACKSTAT == 0);
-}
-
-// Recibe una dirección de 7 bits, no desplazada.
-bool i2c_write_address(uint8_t address)
-{
-    if (address > 0x7F)
-        return false;
-
-    return i2c_write_byte((uint8_t)(address << 1) | 0);
-}
 #endif // PIC16F887
