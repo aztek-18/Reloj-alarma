@@ -6,11 +6,11 @@
         F_DAT = Fosc/(4(SSPADD +1));
 
 */
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <xc.h>   
 
+#define _XTAL_FREQ 4000000 // Frecuencia del oscilador interno (4 MHz típico)
 #define I2C_BAUD        100000UL
 #define I2C_TIMEOUT      50000UL
 
