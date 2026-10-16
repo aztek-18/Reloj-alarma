@@ -23,6 +23,28 @@
 void i2c_init(void);
 
 /*
+ * @brief Scans for the first address to aswer. And fills the address in the parameter given.
+ * @param *uint8_t adress = variable where the address will be stored.
+ * @return true ot false  [success - failed]
+*/
+bool i2c_scan_address(uint8_t* address);
+
+/*
+ * @brief Sends a byte of information and acknowledge the ACK.
+ * @param unit8_t data - 7 bit data to be transmited
+ * @return true ot false [success - failed]
+*/
+bool i2c_write_byte(uint8_t data);
+
+/*
+ * @brief Sends a direction in 7 bits (read only)
+ * @param uint8_t adress - 7 bit direction of the device/sensor
+ * @return true ot false  [success - failed]
+*/
+bool i2c_write_address(uint8_t address);
+
+
+/*
  * @brief wait for idle. Not used during normal programming.
  * @param void
  * @return true ot false 
@@ -47,17 +69,3 @@ bool i2c_start(void);
  * @return true ot false  [sucess - failed]
 */
 bool i2c_stop(void);
-
-/*
- * @brief Sends a byte of information and acknowledge the ACK.
- * @param unit8_t data - 7 bit data to be transmited
- * @return true ot false [success - failed]
-*/
-bool i2c_write_byte(uint8_t data);
-
-/*
- * @brief Sends a direction in 7 bits (read only)
- * @param uint8_t adress - 7 bit direction of the device/sensor
- * @return true ot false  [success - failed]
-*/
-bool i2c_write_address(uint8_t address);
