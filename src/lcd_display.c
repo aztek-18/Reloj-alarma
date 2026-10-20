@@ -1,7 +1,7 @@
 #include "lcd_display.h"
 
 
-bool PCF_Write(uint8_t value)
+static bool PCF_Write(uint8_t value)
 {
     if (!i2c_start())
         return false;
@@ -21,7 +21,7 @@ bool PCF_Write(uint8_t value)
     return i2c_stop();
 }
 
-bool LCD_Write4Bits(uint8_t nibble, bool rs)
+static bool LCD_Write4Bits(uint8_t nibble, bool rs)
 {
     uint8_t value;
 
@@ -44,7 +44,7 @@ bool LCD_Write4Bits(uint8_t nibble, bool rs)
     return true;
 }
 
-bool LCD_SendByte(uint8_t value, bool rs)
+static bool LCD_SendByte(uint8_t value, bool rs)
 {
     if (!LCD_Write4Bits(value >> 4, rs))
         return false;
@@ -55,7 +55,7 @@ bool LCD_SendByte(uint8_t value, bool rs)
     return true;
 }
 
-bool LCD_Command(uint8_t command)
+static bool LCD_Command(uint8_t command)
 {
     if (!LCD_SendByte(command, false))
         return false;
@@ -67,7 +67,7 @@ bool LCD_Command(uint8_t command)
     return true;
 }
 
-bool LCD_Char(char character)
+static bool LCD_Char(char character)
 {
     return LCD_SendByte((uint8_t)character, true);
 }
