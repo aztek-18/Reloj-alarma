@@ -31,8 +31,13 @@ bool LCD_SetCursor(uint8_t row, uint8_t column);
 */
 bool LCD_Puts(const char *text);
 
+bool LCD_Puts_Bus(const char *text);
 /*
  * @brief Cleans the LCD
  * @return true false [success failed]
 */
 bool LCD_Clean(void);
+
+bool PCF_Start(void);
+bool PCF_Stop(void);
+bool LCD_SendByte_Bus(uint8_t value, bool rs);

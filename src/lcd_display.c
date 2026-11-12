@@ -1,7 +1,53 @@
 #include "lcd_display.h"
 
+bool PCF_Start(void)
+{
+    if (!i2c_start())
+        return false;
 
-bool PCF_Write(uint8_t value)
+    if (!i2c_write_address(lcd_addr))
+    {
+        (void)i2c_stop();
+        return false;
+    }
+
+    return true;
+}
+
+static bool PCF_WriteData(uint8_t value)
+{
+    return i2c_write_byte(value);
+}
+
+bool PCF_Stop(void)
+{
+    return i2c_stop();
+}
+
+static bool LCD_Write4Bits_Bus(uint8_t nibble, bool rs)
+{
+    uint8_t value;
+
+    value = (uint8_t)((nibble & 0x0F) << 4);
+    value |= LCD_BL;
+
+    if (rs)
+        value |= LCD_RS;
+
+    if (!PCF_WriteData(value | LCD_EN))
+        return false;
+
+    __delay_us(1);
+
+    if (!PCF_WriteData(value))
+        return false;
+
+    __delay_us(50);
+
+    return true;
+}
+
+static bool PCF_Write(uint8_t value)
 {
     if (!i2c_start())
         return false;
@@ -21,7 +67,7 @@ bool PCF_Write(uint8_t value)
     return i2c_stop();
 }
 
-bool LCD_Write4Bits(uint8_t nibble, bool rs)
+static bool LCD_Write4Bits(uint8_t nibble, bool rs)
 {
     uint8_t value;
 
@@ -44,7 +90,7 @@ bool LCD_Write4Bits(uint8_t nibble, bool rs)
     return true;
 }
 
-bool LCD_SendByte(uint8_t value, bool rs)
+static bool LCD_SendByte(uint8_t value, bool rs)
 {
     if (!LCD_Write4Bits(value >> 4, rs))
         return false;
@@ -55,7 +101,18 @@ bool LCD_SendByte(uint8_t value, bool rs)
     return true;
 }
 
-bool LCD_Command(uint8_t command)
+bool LCD_SendByte_Bus(uint8_t value, bool rs)
+{
+    if (!LCD_Write4Bits_Bus(value >> 4, rs))
+        return false;
+
+    if (!LCD_Write4Bits_Bus(value & 0x0F, rs))
+        return false;
+
+    return true;
+}
+
+static bool LCD_Command(uint8_t command)
 {
     if (!LCD_SendByte(command, false))
         return false;
@@ -67,7 +124,7 @@ bool LCD_Command(uint8_t command)
     return true;
 }
 
-bool LCD_Char(char character)
+static bool LCD_Char(char character)
 {
     return LCD_SendByte((uint8_t)character, true);
 }
@@ -77,6 +134,17 @@ bool LCD_Puts(const char *text)
     while (*text != '\0')
     {
         if (!LCD_Char(*text++))
+            return false;
+    }
+
+    return true;
+}
+
+bool LCD_Puts_Bus(const char *text)
+{
+    while (*text != '\0')
+    {
+        if (!LCD_SendByte_Bus((uint8_t)*text++, true))
             return false;
     }
 
