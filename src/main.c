@@ -6,6 +6,11 @@
 #include "dst_rtc.h"
 
 // #define RTC_SET_ON_STARTUP
+volatile bool bInterrupcionCounter      = 0;
+volatile bool bInterrupcionMenu         = 0;
+volatile uint8_t counter_menu           = 0;
+
+void __interrupt() ISR(void);
 
 int main()
 {
@@ -13,14 +18,6 @@ int main()
 
     // define the time of the Oscilation to 4MHz
     OSCCON = 0b01100001;
-
-    // Disables all the analog inputs and converts all the pins to digital
-    ANSEL = 0x00;
-    ANSELH = 0x00;
-
-    // PORT D configuration
-    TRISDbits.TRISD1 = 0;
-    PORTDbits.RD1 = 0;
 
     // Configuration of the i2c
     i2c_init();
@@ -35,16 +32,35 @@ int main()
         }
     }
 
-    PORTDbits.RD1 = 1;
-
-    // Mostrar mensaje
-    LCD_SetCursor(0, 0);
-    LCD_Puts("Hola, PIC16F887");
-
-    LCD_SetCursor(1, 0);
-    LCD_Puts("I2C funcionando");
-    __delay_ms(1000);
+    LCD_SetCursor(0, 8);
+    LCD_Puts("...");
+    __delay_ms(500);
     LCD_Clean();
+
+    // Disables all the analog inputs and converts all the pins to digital
+    ANSEL                       = 0x00;
+    ANSELH                      = 0x00;
+
+    // PORT D configuration
+    TRISDbits.TRISD1            = 0;
+    PORTDbits.RD1               = 0;
+    // Configuración de botones como selectores
+    TRISDbits.TRISD7            = 1;
+    TRISDbits.TRISD6            = 1;
+
+    // Habilitar la interrupción externa en el pin RB0
+    TRISBbits.TRISB0            = 1;            // RB0 como entrada
+    OPTION_REGbits.INTEDG       = 0;            // Flanco descendiente
+    INTCONbits.INTF             = 0;            // bandera de interrupción
+    INTCONbits.INTE             = 1;            // habilita la interrupción externa de RB0
+    INTCONbits.GIE              = 1;            // habilita las interrupciones globales
+
+    // Habilitar la interrupción externa en el pin RB4
+    TRISBbits.TRISB4            = 1;            // RB4 como entrada
+    IOCBbits.IOCB4              = 1;            // Indicar qué pin se usará como interruptor por cambio de flanco [RB4 - RB7]
+    INTCONbits.RBIE             = 1;            // Habilita la configuración por cambio de flanco en el puerto B
+    INTCONbits.RBIF             = 0;            // Limpiar la bandera de la interrupción en el puerto B
+
     // Inicializar comunicación con DS1302
     DS1302_Init();
 
@@ -64,13 +80,128 @@ int main()
 
     while(1)
     {
+        // Activar el menu de configuracion
+        if(bInterrupcionMenu)
+        {
+            bool bandera_salida                 = false;
+            uint8_t counter_menu_aux            = 0;
+            uint8_t counter_menu_scroll         = 0;
+            uint8_t counter_menu_scroll_prev    = 1;
+            char option0[] = "1. Hora";
+            char option1[] = "2. Minutos";
+            char option2[] = "3. Dia";
+            char option3[] = "4. Mes";
+            char option4[] = "5. Year";
+            char option5[] = "6. Exit";
+            
+            char buffer[10];
+
+            while(!bandera_salida)
+            {
+                // detecta si hay un cambio en el botón de menú
+                if(counter_menu_aux != counter_menu)
+                {
+                    counter_menu_aux = counter_menu;
+                    if(5 == counter_menu_scroll)
+                    {
+                        bandera_salida          = true;
+                        counter_menu            = 0;
+                        counter_menu_scroll     = 0;
+                    }
+                }
+                // detecta si hay un cambio en los botones de cambio RD7 y RD6
+                if(PORTDbits.RD7)
+                {
+                    __delay_ms(200);
+                    counter_menu_scroll++;
+                    if(5 < counter_menu_scroll)
+                        counter_menu_scroll = 0;
+                }
+                if(PORTDbits.RD6)
+                {
+                    __delay_ms(200);
+                    if(0 == counter_menu_scroll)
+                        counter_menu_scroll = 5;
+                    else
+                        counter_menu_scroll--;
+                }
+
+                if(counter_menu_scroll_prev != counter_menu_scroll)
+                {
+                    LCD_Clean();
+                    LCD_SetCursor(0,0);
+                    switch(counter_menu_scroll)
+                    {
+                        case 0:
+                            LCD_Puts(option0);
+                            LCD_SetCursor(0,12);
+                            LCD_Puts("<<-");
+                            LCD_SetCursor(1,0);
+                            LCD_Puts(option1);
+                            break;
+                        case 1:
+                            LCD_Puts(option1);
+                            LCD_SetCursor(0,12);
+                            LCD_Puts("<<-");
+                            LCD_SetCursor(1,0);
+                            LCD_Puts(option2);
+                            break;
+                        case 2:
+                            LCD_Puts(option2);
+                            LCD_SetCursor(0,12);
+                            LCD_Puts("<<-");
+                            LCD_SetCursor(1,0);
+                            LCD_Puts(option3);
+                            break;
+                        case 3:
+                            LCD_Puts(option3);
+                            LCD_SetCursor(0,12);
+                            LCD_Puts("<<-");
+                            LCD_SetCursor(1,0);
+                            LCD_Puts(option4);
+                            break;
+                        case 4:
+                            LCD_Puts(option4);
+                            LCD_SetCursor(0,12);
+                            LCD_Puts("<<-");
+                            LCD_SetCursor(1,0);
+                            LCD_Puts(option5);
+                            break;
+                        case 5:
+                            LCD_Puts(option5);
+                            LCD_SetCursor(0,12);
+                            LCD_Puts("<<-");
+                            LCD_SetCursor(1,0);
+                            LCD_Puts(option0);
+                            break;
+                        default:
+                            LCD_Puts("Error. Exiting");
+                            bandera_salida = true;
+                            counter_menu = 0;
+                    }
+                    counter_menu_scroll_prev = counter_menu_scroll;
+                }
+                
+            }
+            bInterrupcionMenu = false;
+            LCD_Clean();
+        }
+
+        // Aun no se utiliza
+        if(bInterrupcionCounter)
+        {
+            LCD_Clean();
+            LCD_SetCursor(0, 0);
+            LCD_Puts("Boton 2.");
+            __delay_ms(1000);
+            bInterrupcionCounter = false;
+            LCD_Clean();
+        }
+
         RTC_ReadDateTime(&rtc);
 
         if (!LCD_ShowDateTime(&rtc))
         {
-            // Error en LCD/I2C
-            PORTDbits.RD1 = 1;
-
             while(1)
             {
                 __delay_ms(100);
@@ -79,18 +210,28 @@ int main()
         }
 
         PORTDbits.RD1 = !PORTDbits.RD1;
-
         __delay_ms(200);
-    //     LCD_SetCursor(0, 0);
-    // LCD_Puts("123456789012345");
-
-    // LCD_SetCursor(1, 0);
-    // LCD_Puts("12345678901234");
-
-    PORTDbits.RD1 = !PORTDbits.RD1;
-
-    __delay_ms(200);
     }
-
     return 0;
+}
+
+void __interrupt() ISR(void)
+{
+    // Interrupcion para el encoder (rueda de bici)
+    if (INTCONbits.INTF)
+    {
+        uint8_t temp_portB = PORTB;
+        INTCONbits.INTF = 0;
+        bInterrupcionCounter = true;
+    }
+    // interrupcion para el botón de SELECT (MENU)
+    if (INTCONbits.RBIF)
+    {
+        uint8_t temp_portB = PORTB;
+        INTCONbits.RBIF = 0;
+        counter_menu++;
+        if(200 <= counter_menu)
+            counter_menu = 0;
+        bInterrupcionMenu = true;
+    }
 }
