@@ -1,5 +1,6 @@
 #include <xc.h>
 #include <stdint.h>
+#include <stdio.h>
 #include "config_fuses.h"
 #include "i2c.h"
 #include "lcd_display.h"
@@ -68,10 +69,10 @@ int main()
     // AJUSTA estos valores a tu fecha y hora.
     // Activa esta opción solo para ajustar el RTC.
     rtc.second = 0;
-    rtc.minute = 6;
-    rtc.hour   = 23;
-    rtc.day    = 19;
-    rtc.month  = 10;
+    rtc.minute = 21;
+    rtc.hour   = 1;
+    rtc.day    = 22;
+    rtc.month  = 11;
     rtc.year   = 26;
 
     RTC_SetDateTime(rtc);
@@ -83,8 +84,9 @@ int main()
         // Activar el menu de configuracion
         if(bInterrupcionMenu)
         {
+            __delay_ms(200);
             bool bandera_salida                 = false;
-            uint8_t counter_menu_aux            = 0;
+            uint8_t counter_menu_aux            = counter_menu;
             uint8_t counter_menu_scroll         = 0;
             uint8_t counter_menu_scroll_prev    = 1;
             char option0[] = "1. Hora";
@@ -98,11 +100,245 @@ int main()
 
             while(!bandera_salida)
             {
+                PORTDbits.RD1 = !PORTDbits.RD1;
+                __delay_ms(200);
                 // detecta si hay un cambio en el botón de menú
                 if(counter_menu_aux != counter_menu)
                 {
+                    __delay_ms(200);
                     counter_menu_aux = counter_menu;
-                    if(5 == counter_menu_scroll)
+                    
+                    if(0 == counter_menu_scroll)
+                    {
+                        bool bandera_salida_menu_in         = false;
+                        uint8_t hora                        = 30;
+                        char buffer[10];
+                        while(!bandera_salida_menu_in)
+                        {
+                            if(hora != rtc.hour)
+                            {
+                                if(30 == hora)
+                                    hora = 0;
+                                LCD_Clean();
+                                LCD_SetCursor(0,4);
+                                LCD_Puts("Hora:");
+                                LCD_SetCursor(1,4);
+                                sprintf(buffer, "%d", hora);
+                                LCD_Puts(buffer);
+                                
+                                rtc.hour = hora;
+                            }
+
+                            if(PORTDbits.RD7)
+                            {
+                                __delay_ms(200);
+                                hora++;
+                                if(23 < hora)
+                                    hora = 0;
+                            }
+                            if(PORTDbits.RD6)
+                            {
+                                __delay_ms(200);
+                                if(0 == hora)
+                                    hora = 23;
+                                else
+                                    hora--;
+                            }
+
+                            if(counter_menu_aux != counter_menu)
+                            {
+                                __delay_ms(200);
+                                counter_menu_aux = counter_menu;
+                                RTC_SetDateTime(rtc);
+                                bandera_salida_menu_in = true;
+                            }
+                        }
+                    }
+                    else if(1 == counter_menu_scroll)
+                    {
+                        bool bandera_salida_menu_in         = false;
+                        uint8_t minute                        = 70;
+                        char buffer[10];
+                        while(!bandera_salida_menu_in)
+                        {
+                            if(minute != rtc.minute)
+                            {
+                                if(70 == minute)
+                                    minute = 0;
+                                LCD_Clean();
+                                LCD_SetCursor(0,4);
+                                LCD_Puts("Minute:");
+                                LCD_SetCursor(1,4);
+                                sprintf(buffer, "%d", minute);
+                                LCD_Puts(buffer);
+                                
+                                rtc.minute = minute;
+                            }
+
+                            if(PORTDbits.RD7)
+                            {
+                                __delay_ms(200);
+                                minute++;
+                                if(59 < minute)
+                                    minute = 0;
+                            }
+                            if(PORTDbits.RD6)
+                            {
+                                __delay_ms(200);
+                                if(0 == minute)
+                                    minute = 59;
+                                else
+                                    minute--;
+                            }
+
+                            if(counter_menu_aux != counter_menu)
+                            {
+                                __delay_ms(200);
+                                counter_menu_aux = counter_menu;
+                                RTC_SetDateTime(rtc);
+                                bandera_salida_menu_in = true;
+                            }
+                        }
+                    }
+                    else if(2 == counter_menu_scroll)
+                    {
+                        bool bandera_salida_menu_in         = false;
+                        uint8_t day                        = 32;
+                        char buffer[10];
+                        while(!bandera_salida_menu_in)
+                        {
+                            if(day != rtc.day)
+                            {
+                                if(32 == day)
+                                    day = 1;
+                                LCD_Clean();
+                                LCD_SetCursor(0,4);
+                                LCD_Puts("Day:");
+                                LCD_SetCursor(1,4);
+                                sprintf(buffer, "%d", day);
+                                LCD_Puts(buffer);
+                                
+                                rtc.day = day;
+                            }
+
+                            if(PORTDbits.RD7)
+                            {
+                                __delay_ms(200);
+                                day++;
+                                if(31 < day)
+                                    day = 1;
+                            }
+                            if(PORTDbits.RD6)
+                            {
+                                __delay_ms(200);
+                                if(1 == day)
+                                    day = 31;
+                                else
+                                    day--;
+                            }
+
+                            if(counter_menu_aux != counter_menu)
+                            {
+                                __delay_ms(200);
+                                counter_menu_aux = counter_menu;
+                                RTC_SetDateTime(rtc);
+                                bandera_salida_menu_in = true;
+                            }
+                        }
+                    }
+                    else if(3 == counter_menu_scroll)
+                    {
+                        bool bandera_salida_menu_in         = false;
+                        uint8_t month                        = 13;
+                        char buffer[10];
+                        while(!bandera_salida_menu_in)
+                        {
+                            if(month != rtc.month)
+                            {
+                                if(13 == month)
+                                    month = 1;
+                                LCD_Clean();
+                                LCD_SetCursor(0,4);
+                                LCD_Puts("Month:");
+                                LCD_SetCursor(1,4);
+                                sprintf(buffer, "%d", month);
+                                LCD_Puts(buffer);
+                                
+                                rtc.month = month;
+                            }
+
+                            if(PORTDbits.RD7)
+                            {
+                                __delay_ms(200);
+                                month++;
+                                if(12 < month)
+                                    month = 1;
+                            }
+                            if(PORTDbits.RD6)
+                            {
+                                __delay_ms(200);
+                                if(1 == month)
+                                    month = 12;
+                                else
+                                    month--;
+                            }
+
+                            if(counter_menu_aux != counter_menu)
+                            {
+                                __delay_ms(200);
+                                counter_menu_aux = counter_menu;
+                                RTC_SetDateTime(rtc);
+                                bandera_salida_menu_in = true;
+                            }
+                        }
+                    }
+                    else if(4 == counter_menu_scroll)
+                    {
+                        bool bandera_salida_menu_in         = false;
+                        uint8_t year                        = 100;
+                        char buffer[10];
+                        while(!bandera_salida_menu_in)
+                        {
+                            if(year != rtc.year)
+                            {
+                                if(100 == year)
+                                    year = 26;
+                                LCD_Clean();
+                                LCD_SetCursor(0,4);
+                                LCD_Puts("Year:");
+                                LCD_SetCursor(1,4);
+                                sprintf(buffer, "%d", year);
+                                LCD_Puts(buffer);
+                                
+                                rtc.year = year;
+                            }
+
+                            if(PORTDbits.RD7)
+                            {
+                                __delay_ms(200);
+                                year++;
+                                if(99 < year)
+                                    year = 26;
+                            }
+                            if(PORTDbits.RD6)
+                            {
+                                __delay_ms(200);
+                                if(26 == year)
+                                    year = 99;
+                                else
+                                    year--;
+                            }
+
+                            if(counter_menu_aux != counter_menu)
+                            {
+                                __delay_ms(200);
+                                counter_menu_aux = counter_menu;
+                                RTC_SetDateTime(rtc);
+                                bandera_salida_menu_in = true;
+                            }
+                        }
+                    }
+                    else if(5 == counter_menu_scroll)
                     {
                         bandera_salida          = true;
                         counter_menu            = 0;
@@ -181,7 +417,6 @@ int main()
                     }
                     counter_menu_scroll_prev = counter_menu_scroll;
                 }
-                
             }
             bInterrupcionMenu = false;
             LCD_Clean();
