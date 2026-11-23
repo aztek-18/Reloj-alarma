@@ -63,7 +63,6 @@ int main()
     INTCONbits.RBIF             = 0;            // Limpiar la bandera de la interrupción en el puerto B
 
     // Configuración del Watchdog por software
-    // WDTCONbits.WDTPS            = 0b1011;   // ~2 s
     WDTCONbits.WDTPS            = 0b0011;   // ~2 s
     WDTCONbits.SWDTEN           = 1;        // Habilita WDT
 
