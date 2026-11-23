@@ -62,6 +62,11 @@ int main()
     INTCONbits.RBIE             = 1;            // Habilita la configuración por cambio de flanco en el puerto B
     INTCONbits.RBIF             = 0;            // Limpiar la bandera de la interrupción en el puerto B
 
+    // Configuración del Watchdog por software
+    // WDTCONbits.WDTPS            = 0b1011;   // ~2 s
+    WDTCONbits.WDTPS            = 0b0011;   // ~2 s
+    WDTCONbits.SWDTEN           = 1;        // Habilita WDT
+
     // Inicializar comunicación con DS1302
     DS1302_Init();
 
@@ -152,6 +157,7 @@ int main()
                                 RTC_SetDateTime(rtc);
                                 bandera_salida_menu_in = true;
                             }
+                            CLRWDT();
                         }
                     }
                     else if(1 == counter_menu_scroll)
@@ -198,6 +204,7 @@ int main()
                                 RTC_SetDateTime(rtc);
                                 bandera_salida_menu_in = true;
                             }
+                            CLRWDT();
                         }
                     }
                     else if(2 == counter_menu_scroll)
@@ -244,6 +251,7 @@ int main()
                                 RTC_SetDateTime(rtc);
                                 bandera_salida_menu_in = true;
                             }
+                            CLRWDT();
                         }
                     }
                     else if(3 == counter_menu_scroll)
@@ -290,6 +298,7 @@ int main()
                                 RTC_SetDateTime(rtc);
                                 bandera_salida_menu_in = true;
                             }
+                            CLRWDT();
                         }
                     }
                     else if(4 == counter_menu_scroll)
@@ -336,6 +345,7 @@ int main()
                                 RTC_SetDateTime(rtc);
                                 bandera_salida_menu_in = true;
                             }
+                            CLRWDT();
                         }
                     }
                     else if(5 == counter_menu_scroll)
@@ -417,9 +427,11 @@ int main()
                     }
                     counter_menu_scroll_prev = counter_menu_scroll;
                 }
+                CLRWDT();    
             }
             bInterrupcionMenu = false;
             LCD_Clean();
+            CLRWDT();
         }
 
         // Aun no se utiliza
@@ -428,7 +440,7 @@ int main()
             LCD_Clean();
             LCD_SetCursor(0, 0);
             LCD_Puts("Boton 2.");
-            __delay_ms(1000);
+            __delay_ms(5000);
             bInterrupcionCounter = false;
             LCD_Clean();
         }
@@ -446,6 +458,7 @@ int main()
 
         PORTDbits.RD1 = !PORTDbits.RD1;
         __delay_ms(200);
+        CLRWDT();
     }
     return 0;
 }
