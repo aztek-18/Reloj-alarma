@@ -160,16 +160,16 @@ static void RTC_TwoDigits(char *dest, uint8_t value)
 
 bool LCD_ShowDateTime(const RTC_DateTime *rtc)
 {
-    char dateLine[] = "Fecha: 00/00/00";
-    char timeLine[] = "Hora: 00:00:00";
+    char dateLine[] = "    00/00/00";
+    char timeLine[] = "    00:00:00";
 
-    RTC_TwoDigits(&dateLine[7], rtc->day);
-    RTC_TwoDigits(&dateLine[10], rtc->month);
-    RTC_TwoDigits(&dateLine[13], rtc->year);
+    RTC_TwoDigits(&dateLine[4], rtc->day);
+    RTC_TwoDigits(&dateLine[7], rtc->month);
+    RTC_TwoDigits(&dateLine[10], rtc->year);
 
-    RTC_TwoDigits(&timeLine[6], rtc->hour);
-    RTC_TwoDigits(&timeLine[9], rtc->minute);
-    RTC_TwoDigits(&timeLine[12], rtc->second);
+    RTC_TwoDigits(&timeLine[4], rtc->hour);
+    RTC_TwoDigits(&timeLine[7], rtc->minute);
+    RTC_TwoDigits(&timeLine[10], rtc->second);
 
     /*
      * Primera línea

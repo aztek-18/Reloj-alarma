@@ -5,9 +5,9 @@
 #include "i2c.h"
 #include "lcd_display.h"
 #include "dst_rtc.h"
+#include "RPM.h"
 
 // #define RTC_SET_ON_STARTUP
-volatile bool bInterrupcionCounter      = 0;
 volatile bool bInterrupcionMenu         = 0;
 volatile uint8_t counter_menu           = 0;
 
@@ -82,6 +82,9 @@ int main()
     RTC_SetDateTime(rtc);
 #endif //RTC_SET_ON_STARTUP
     PORTDbits.RD1 = 0;
+
+    uint8_t alternate_counter   = 0;
+    bool bAlternateMenu         = false;
 
     while(1)
     {
@@ -433,26 +436,42 @@ int main()
             CLRWDT();
         }
 
-        // Aun no se utiliza
-        if(bInterrupcionCounter)
+        if(bAlternateMenu)
         {
-            LCD_Clean();
-            LCD_SetCursor(0, 0);
-            LCD_Puts("Boton 2.");
-            __delay_ms(5000);
-            bInterrupcionCounter = false;
-            LCD_Clean();
-        }
-
-        RTC_ReadDateTime(&rtc);
-
-        if (!LCD_ShowDateTime(&rtc))
-        {
-            while(1)
+            // instrucciones para mostrar tanto el RPM como el nivel de bateria (futuro commit)
+            if(0 == alternate_counter)
             {
-                __delay_ms(100);
-                PORTDbits.RD1 = !PORTDbits.RD1;
+                if (!LCD_Clean())
+                    return false;
             }
+            
+            if(!RPM_ShowMenu())
+            {
+                while(1)
+                {
+                    __delay_ms(100);
+                    PORTDbits.RD1 = !PORTDbits.RD1;
+                }
+            }
+            AlternateFlag(&alternate_counter, &bAlternateMenu);
+        }
+        else
+        {
+            if(0 == alternate_counter)
+            {
+                if (!LCD_Clean())
+                    return false;
+            }
+            RTC_ReadDateTime(&rtc);
+            if (!LCD_ShowDateTime(&rtc))
+            {
+                while(1)
+                {
+                    __delay_ms(100);
+                    PORTDbits.RD1 = !PORTDbits.RD1;
+                }
+            }
+            AlternateFlag(&alternate_counter, &bAlternateMenu);
         }
 
         PORTDbits.RD1 = !PORTDbits.RD1;
@@ -469,7 +488,6 @@ void __interrupt() ISR(void)
     {
         uint8_t temp_portB = PORTB;
         INTCONbits.INTF = 0;
-        bInterrupcionCounter = true;
     }
     // interrupcion para el botón de SELECT (MENU)
     if (INTCONbits.RBIF)
