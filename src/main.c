@@ -10,6 +10,8 @@
 // #define RTC_SET_ON_STARTUP
 volatile bool bInterrupcionMenu         = 0;
 volatile uint8_t counter_menu           = 0;
+volatile uint8_t counter_encoder        = 0;
+volatile bool flag_1s                   = 0;
 
 void __interrupt() ISR(void);
 
@@ -44,7 +46,10 @@ int main()
 
     // PORT D configuration
     TRISDbits.TRISD1            = 0;
+    TRISDbits.TRISD5            = 0;
     PORTDbits.RD1               = 0;
+    PORTDbits.RD5               = 0;
+    
     // Configuración de botones como selectores
     TRISDbits.TRISD7            = 1;
     TRISDbits.TRISD6            = 1;
@@ -63,8 +68,21 @@ int main()
     INTCONbits.RBIF             = 0;            // Limpiar la bandera de la interrupción en el puerto B
 
     // Configuración del Watchdog por software
-    WDTCONbits.WDTPS            = 0b0011;   // ~2 s
-    WDTCONbits.SWDTEN           = 1;        // Habilita WDT
+    WDTCONbits.WDTPS            = 0b0011;       // ~2 s
+    WDTCONbits.SWDTEN           = 1;            // Habilita WDT
+
+    // Configuración del Timer1 para el cálculo de la velocidad (1s)
+    T1CONbits.TMR1ON            = 0;            // Timer1 apagado mientras configuramos
+    T1CONbits.TMR1CS            = 0;            // Fuente de reloj: FOSC/4
+    T1CONbits.T1CKPS            = 0b11;         // Prescaler 1:8
+    T1CONbits.T1OSCEN           = 0;            // Oscilador dedicado de Timer1 apagado
+    T1CONbits.T1SYNC            = 0;            // Sincronización no importa usando reloj interno
+    TMR1H                       = 0x0B;         // Cargar Timer1 para ~500 ms (HIGH)
+    TMR1L                       = 0xDC;         // Cargar Timer1 para ~500 ms (LOW)
+    PIR1bits.TMR1IF             = 0;            // Limpiar bandera
+    PIE1bits.TMR1IE             = 1;            // Habilitar interrupción de Timer1    
+    INTCONbits.PEIE             = 1;            // Habilitar interrupciones periféricas
+    T1CONbits.TMR1ON            = 1;            // Encender Timer1
 
     // Inicializar comunicación con DS1302
     DS1302_Init();
@@ -483,11 +501,15 @@ int main()
 
 void __interrupt() ISR(void)
 {
+    static uint8_t timer1_count = 0;
     // Interrupcion para el encoder (rueda de bici)
     if (INTCONbits.INTF)
     {
         uint8_t temp_portB = PORTB;
         INTCONbits.INTF = 0;
+        counter_encoder++;
+        if(254 <= counter_encoder)
+            counter_encoder = 0;
     }
     // interrupcion para el botón de SELECT (MENU)
     if (INTCONbits.RBIF)
@@ -498,5 +520,23 @@ void __interrupt() ISR(void)
         if(200 <= counter_menu)
             counter_menu = 0;
         bInterrupcionMenu = true;
+    }
+    // Interrupción de Timer1
+    if (PIR1bits.TMR1IF)
+    {
+        PIR1bits.TMR1IF = 0;
+
+        // Recargar Timer1 para otros ~500 ms
+        TMR1H = 0x0B;
+        TMR1L = 0xDC;
+
+        timer1_count++;
+
+        if (timer1_count >= 2)
+        {
+            timer1_count = 0;
+            flag_1s = 1;
+            PORTDbits.RD5 = !PORTDbits.RD5;
+        }
     }
 }

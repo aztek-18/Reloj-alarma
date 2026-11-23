@@ -71,3 +71,10 @@ bool RPM_ShowMenu(void)
     return true;
 }
 
+static float CalcVel(uint8_t* counter_encoder)
+{
+    // // Formulas para saber la velocidad. Habilitar despues de la implementacion del Timer por segundo
+    // RPM = (PulsosPorSegundo) * (60) / (PulsosPorRevolcion);
+    // Velocidad = (RPM)*(Diametro * pi)/60;
+    return 0;
+}
