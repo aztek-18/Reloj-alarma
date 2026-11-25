@@ -11,57 +11,50 @@ void AlternateFlag(uint8_t* counter, bool* flag)
     }
 }
 
-static void RTC_TwoDigits(char *dest, uint8_t value)
+static uint16_t CalcVel(uint16_t pulses)
 {
-    dest[0] = (char)('0' + (value / 10));
-    dest[1] = (char)('0' + (value % 10));
+    uint32_t velocidad;
+    velocidad = (uint32_t)pulses
+              * DIAM_RUEDA_MM
+              * 31416UL
+              * 36UL;
+
+    velocidad /= ((uint32_t)NUM_PULSES * 1000000UL);
+
+    return (uint16_t)velocidad;
 }
 
-bool RPM_ShowMenu(void)
+bool RPM_ShowMenu(uint16_t *counter_encoder)
 {
     char velLine[] = "    00.00 km/h";
-    char batStatus[] = "    99% per";
 
-    RTC_TwoDigits(&velLine[4], 10);
-    RTC_TwoDigits(&velLine[7], 50);
-    RTC_TwoDigits(&batStatus[4], 99);
+    uint16_t velocidad;
+    uint8_t entero;
+    uint8_t decimal;
 
-    /*
-     * Primera línea
-     */
+    velocidad = CalcVel(*counter_encoder);
+
+    entero = velocidad / 100;
+    decimal = velocidad % 100;
+
+    velLine[4] = '0' + (entero / 10);
+    velLine[5] = '0' + (entero % 10);
+
+    velLine[7] = '0' + (decimal / 10);
+    velLine[8] = '0' + (decimal % 10);
+
     if (!PCF_Start())
         return false;
 
     if (!LCD_SendByte_Bus(0x80, false))
     {
-        (void)PCF_Stop();
+        PCF_Stop();
         return false;
     }
 
     if (!LCD_Puts_Bus(velLine))
     {
-        (void)PCF_Stop();
-        return false;
-    }
-
-    if (!PCF_Stop())
-        return false;
-
-    /*
-     * Segunda línea
-     */
-    if (!PCF_Start())
-        return false;
-
-    if (!LCD_SendByte_Bus(0xC0, false))
-    {
-        (void)PCF_Stop();
-        return false;
-    }
-
-    if (!LCD_Puts_Bus(batStatus))
-    {
-        (void)PCF_Stop();
+        PCF_Stop();
         return false;
     }
 
@@ -69,12 +62,4 @@ bool RPM_ShowMenu(void)
         return false;
 
     return true;
-}
-
-static float CalcVel(uint8_t* counter_encoder)
-{
-    // // Formulas para saber la velocidad. Habilitar despues de la implementacion del Timer por segundo
-    // RPM = (PulsosPorSegundo) * (60) / (PulsosPorRevolcion);
-    // Velocidad = (RPM)*(Diametro * pi)/60;
-    return 0;
 }

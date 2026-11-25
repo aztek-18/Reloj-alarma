@@ -10,7 +10,8 @@
 // #define RTC_SET_ON_STARTUP
 volatile bool bInterrupcionMenu         = 0;
 volatile uint8_t counter_menu           = 0;
-volatile uint8_t counter_encoder        = 0;
+volatile uint16_t counter_encoder       = 0;
+volatile uint16_t pulses_1s             = 0;
 volatile bool flag_1s                   = 0;
 
 void __interrupt() ISR(void);
@@ -114,12 +115,12 @@ int main()
             uint8_t counter_menu_aux            = counter_menu;
             uint8_t counter_menu_scroll         = 0;
             uint8_t counter_menu_scroll_prev    = 1;
-            char option0[] = "1. Hora";
-            char option1[] = "2. Minutos";
-            char option2[] = "3. Dia";
-            char option3[] = "4. Mes";
-            char option4[] = "5. Year";
-            char option5[] = "6. Exit";
+            static char option0[] = "1. Hora";
+            static char option1[] = "2. Minutos";
+            static char option2[] = "3. Dia";
+            static char option3[] = "4. Mes";
+            static char option4[] = "5. Year";
+            static char option5[] = "6. Exit";
             
             char buffer[10];
 
@@ -463,7 +464,7 @@ int main()
                     return false;
             }
             
-            if(!RPM_ShowMenu())
+            if(!RPM_ShowMenu(&pulses_1s))
             {
                 while(1)
                 {
@@ -508,8 +509,6 @@ void __interrupt() ISR(void)
         uint8_t temp_portB = PORTB;
         INTCONbits.INTF = 0;
         counter_encoder++;
-        if(254 <= counter_encoder)
-            counter_encoder = 0;
     }
     // interrupcion para el botón de SELECT (MENU)
     if (INTCONbits.RBIF)
@@ -537,6 +536,8 @@ void __interrupt() ISR(void)
             timer1_count = 0;
             flag_1s = 1;
             PORTDbits.RD5 = !PORTDbits.RD5;
+            pulses_1s = counter_encoder;
+            counter_encoder = 0;
         }
     }
 }

@@ -160,8 +160,8 @@ static void RTC_TwoDigits(char *dest, uint8_t value)
 
 bool LCD_ShowDateTime(const RTC_DateTime *rtc)
 {
-    char dateLine[] = "    00/00/00";
-    char timeLine[] = "    00:00:00";
+    static char dateLine[] = "    00/00/00";
+    static char timeLine[] = "    00:00:00";
 
     RTC_TwoDigits(&dateLine[4], rtc->day);
     RTC_TwoDigits(&dateLine[7], rtc->month);
